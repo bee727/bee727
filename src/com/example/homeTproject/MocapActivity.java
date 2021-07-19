@@ -1,6 +1,6 @@
 // Partial code migrated from https://github.com/ildoonet/tf-pose-estimation
 
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -18,10 +18,11 @@ import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 
-import com.ricardotejo.openpose.OverlayView.DrawCallback;
-import com.ricardotejo.openpose.env.BorderedText;
-import com.ricardotejo.openpose.env.ImageUtils;
-import com.ricardotejo.openpose.env.Logger;
+import com.example.homeTproject.env.BorderedText;
+import com.example.homeTproject.env.ImageUtils;
+import com.example.homeTproject.env.Logger;
+import com.example.homeTproject.OverlayView.DrawCallback;
+import com.example.homeTproject.R;
 
 import java.util.List;
 import java.util.Set;

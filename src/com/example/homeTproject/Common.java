@@ -1,6 +1,6 @@
 // Code migrated from https://github.com/ildoonet/tf-pose-estimation
 
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 public class Common {
 

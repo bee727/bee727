@@ -1,4 +1,4 @@
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 /*
  * Copyright 2017 The TensorFlow Authors. All Rights Reserved.
@@ -35,8 +35,9 @@ import android.view.ViewGroup;
 import java.io.IOException;
 import java.util.List;
 
-import com.ricardotejo.openpose.env.ImageUtils;
-import com.ricardotejo.openpose.env.Logger;
+import com.example.homeTproject.R;
+import com.example.homeTproject.env.ImageUtils;
+import com.example.homeTproject.env.Logger;
 
 @SuppressLint("ValidFragment")
 public class LegacyCameraConnectionFragment extends Fragment {

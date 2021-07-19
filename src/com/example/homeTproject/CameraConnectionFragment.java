@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -59,8 +59,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import com.ricardotejo.openpose.env.Logger;
-import com.ricardotejo.openpose.R; // Explicit import needed for internal Google builds.
+
+import com.example.homeTproject.env.Logger;
+import com.example.homeTproject.R; // Explicit import needed for internal Google builds.
 
 @SuppressLint("ValidFragment")
 public class CameraConnectionFragment extends Fragment {

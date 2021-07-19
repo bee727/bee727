@@ -1,14 +1,11 @@
-package com.ricardotejo.openpose
+package com.example.homeTproject
 
-import android.app.ActionBar
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.ricardotejo.openpose.databinding.ActivityMainBinding
-import com.ricardotejo.openpose.databinding.HomefragmentBinding
+import com.example.homeTproject.databinding.ActivityMainBinding
+import com.example.homeTproject.databinding.HomefragmentBinding
 
 class MainActivity : AppCompatActivity() {
 

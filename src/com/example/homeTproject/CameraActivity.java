@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 import android.Manifest;
 import android.app.Activity;
@@ -43,8 +43,9 @@ import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
-import com.ricardotejo.openpose.env.ImageUtils;
-import com.ricardotejo.openpose.env.Logger;
+import com.example.homeTproject.env.Logger;
+import com.example.homeTproject.R;
+import com.example.homeTproject.env.ImageUtils;
 
 // 이게 앱 화면 그리는 클래스 인듯
 public abstract class CameraActivity extends Activity

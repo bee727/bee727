@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 import android.content.Context;
 import android.util.AttributeSet;

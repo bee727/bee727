@@ -1,5 +1,5 @@
 // Partial code migrated from https://github.com/ildoonet/tf-pose-estimation
-package com.ricardotejo.openpose;
+package com.example.homeTproject;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;

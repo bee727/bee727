@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/openpose-android-demo-master.iml" filepath="$PROJECT_DIR$/.idea/modules/openpose-android-demo-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/homTproject.iml" filepath="$PROJECT_DIR$/.idea/modules/homTproject.iml" />
     </modules>
   </component>
 </project>

@@ -1,13 +1,11 @@
-package com.ricardotejo.openpose
+package com.example.homeTproject
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.ricardotejo.openpose.databinding.HomefragmentBinding
-import com.ricardotejo.openpose.databinding.LikefragmentBinding
+import com.example.homeTproject.databinding.LikefragmentBinding
 
 class LikeFragment : Fragment() {
 
