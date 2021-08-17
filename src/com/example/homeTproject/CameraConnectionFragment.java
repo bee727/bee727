@@ -71,11 +71,14 @@ public class CameraConnectionFragment extends Fragment {
    * The camera preview size will be chosen to be the smallest frame by pixel size capable of
    * containing a DESIRED_SIZE x DESIRED_SIZE square.
    */
+
+//  카메라 미리보기 크기는 원하는 크기 x 원하는 크기 정사각형을 포함할 수 있는 픽셀 크기별로 가장 작은 프레임으로 선택됩니다.
   private static final int MINIMUM_PREVIEW_SIZE = 320;
 
   /**
    * Conversion from screen rotation to JPEG orientation.
    */
+  // 앱의 화면을 가로방향으로 돌려 고정하는 코드
   private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
   private static final String FRAGMENT_DIALOG = "dialog";
 
@@ -90,6 +93,8 @@ public class CameraConnectionFragment extends Fragment {
    * {@link android.view.TextureView.SurfaceTextureListener} handles several lifecycle events on a
    * {@link TextureView}.
    */
+  // SurfaceView를 사용하면 알파, 확대, 뒤집기 등이 제한적
+  // TextureView는 이런 SurfaceView를 보완하여 나온 것? 콘텐트 스트림을 나타냄
   private final TextureView.SurfaceTextureListener surfaceTextureListener =
       new TextureView.SurfaceTextureListener() {
         @Override
@@ -117,6 +122,7 @@ public class CameraConnectionFragment extends Fragment {
    * Callback for Activities to use to initialize their data once the
    * selected preview size is known.
    */
+  // 선택된 미리보기 사이즈를 알고 나면 데이터를 초기화 하기 위한 콜백?
   public interface ConnectionCallback {
     void onPreviewSizeChosen(Size size, int cameraRotation);
   }
@@ -129,6 +135,7 @@ public class CameraConnectionFragment extends Fragment {
   /**
    * An {@link AutoFitTextureView} for camera preview.
    */
+  // AutoFitTextureView 는 TextureView의 서브클래스로 가로/세로 비율을 알맞게 조정해줍니다.
   private AutoFitTextureView textureView;
 
   /**
@@ -139,7 +146,7 @@ public class CameraConnectionFragment extends Fragment {
   /**
    * A reference to the opened {@link CameraDevice}.
    */
-  private CameraDevice cameraDevice;
+  private CameraDevice cameraDevice; // 카메라 기기를 나타냄
 
   /**
    * The rotation in degrees of the camera sensor from the display.
@@ -363,7 +370,14 @@ public class CameraConnectionFragment extends Fragment {
   /**
    * Sets up member variables related to camera.
    */
+  // 카메라와 관련된 멤버 변수 셋업
   private void setUpCameraOutputs() {
+    //후면 카메라 선택
+    //캡쳐된 사진(이미지리더)의 해상도, 포맷 선택
+    //이미지의 방향
+    //적합한 프리뷰 사이즈 선택
+    //들어오는 영상의 비율에 맞춰 TextureView의 비율 변경(이 부분은 예제에 포함된 AutoFitTextureView 커스텀 뷰입니다)
+    //플래시 지원 여부
     final Activity activity = getActivity();
     final CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
     try {
@@ -378,7 +392,7 @@ public class CameraConnectionFragment extends Fragment {
               Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888)),
               new CompareSizesByArea());
 
-      sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+      sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION); //SENSOR_ORIENTATION: 카메라가 사진 찍음
 
       // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
       // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
@@ -482,12 +496,15 @@ public class CameraConnectionFragment extends Fragment {
       new CameraCaptureSession.CaptureCallback() {
         @Override
         public void onCaptureProgressed(
-            final CameraCaptureSession session,
-            final CaptureRequest request,
-            final CaptureResult partialResult) {}
+            final CameraCaptureSession session, // CameraCaptureSession : 매우 중요한 API로,
+            // 프로그램에서 사진을 미리보고 사진을 찍어야 할 경우이 클래스의 인스턴스를 통해 세션이 생성됩니다
+            // 미리보기를 제어하는 메소드는 setRepeatingRequest (), 사진을 제어하는 메소드는 capture ()입니다.
+            final CaptureRequest request, // CaptureRequest : 단일 이미지를 캡처하기 위해 카메라 장치에
+            // 필요한 모든 캡처 매개 변수를 정의합니다. 이 요청에는이 캡처의 대상으로 사용해야하는 구성된 출력 표면이 나열됩니다.
+            final CaptureResult partialResult) {} // CaptureResult: 사진 촬영 후 결과를 설명합니다.
 
         @Override
-        public void onCaptureCompleted(
+        public void onCaptureCompleted( // 재정의 시 결과는 처리되지 않은 프레임 데이터
             final CameraCaptureSession session,
             final CaptureRequest request,
             final TotalCaptureResult result) {}
@@ -546,7 +563,7 @@ public class CameraConnectionFragment extends Fragment {
 
                 // Finally, we start displaying the camera preview.
                 previewRequest = previewRequestBuilder.build();
-                captureSession.setRepeatingRequest(
+                captureSession.setRepeatingRequest( // setRepeatingRequest: 미리보기 켜기
                     previewRequest, captureCallback, backgroundHandler);
               } catch (final CameraAccessException e) {
                 LOGGER.e(e, "Exception!");
@@ -573,6 +590,7 @@ public class CameraConnectionFragment extends Fragment {
    * @param viewHeight The height of `mTextureView`
    */
   private void configureTransform(final int viewWidth, final int viewHeight) {
+    // 스크린과 카메라의 영상의 방향을 맞추기 위해 View를 매트릭스 연산으로 회전시킴
     final Activity activity = getActivity();
     if (null == textureView || null == previewSize || null == activity) {
       return;

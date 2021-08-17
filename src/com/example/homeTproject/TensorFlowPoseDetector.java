@@ -62,7 +62,7 @@ public class TensorFlowPoseDetector implements Classifier {
         c.inputName = inputNodeName;
 
         try {
-            c.inferenceInterface = new TensorFlowInferenceInterface(assetManager, modelFilename);
+            c.inferenceInterface = new TensorFlowInferenceInterface(assetManager, modelFilename); //모델파일을 텐서플로우로 불러옴
         } catch (RuntimeException re) {
             Log.e(TAG, "CAUSE " + re.getCause().getMessage(), re);
         }
@@ -315,7 +315,7 @@ public class TensorFlowPoseDetector implements Classifier {
         return result;
     }
 
-    class Coord {
+    class Coord { //Coord Class
         public float x;
         public float y;
 
@@ -547,12 +547,14 @@ public class TensorFlowPoseDetector implements Classifier {
         List<Human> humans = new ArrayList<>();
         for (List<Connection> conn : connection_by_human.values()) {
             humans.add(connections_to_human(conn, heatMat, w));
+            System.out.println("please human: " + humans.get(0).parts.values().iterator().hasNext()); // human 값 확인
         }
         return humans;
     }
 
-    class Human {
+    class Human { //휴먼 클래스
         Map<Integer, Coord> parts = new HashMap<>();
+        // HashMap은 Map interface의 한 종류, integer 키 값, Coord 밸류 값
 
     }
 

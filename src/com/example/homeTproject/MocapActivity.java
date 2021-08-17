@@ -2,6 +2,8 @@
 
 package com.example.homeTproject;
 
+import android.app.Activity;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -15,6 +17,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 
@@ -24,9 +27,20 @@ import com.example.homeTproject.env.Logger;
 import com.example.homeTproject.OverlayView.DrawCallback;
 import com.example.homeTproject.R;
 
+import org.tensorflow.lite.Interpreter;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+
+import static java.lang.Math.round;
+import static java.sql.Types.NULL;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -34,6 +48,8 @@ import java.util.Vector;
  */
 public class MocapActivity extends CameraActivity implements OnImageAvailableListener {
     private static final Logger LOGGER = new Logger();
+
+    int[] model_output = new int[38];
 
     private static final int MP_INPUT_SIZE = 368;
     private static final String MP_INPUT_NAME = "image";
@@ -100,7 +116,7 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
 
         LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
         rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
-        croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
+        croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888); //ARGB_8888 : 각 픽셀은 4bytes로 저장된다.
 
         frameToCropTransform =
                 ImageUtils.getTransformationMatrix(
@@ -133,7 +149,7 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
                             return;
                         }
 
-                        final int backgroundColor = Color.rgb(0, 255, 0);
+                        final int backgroundColor = Color.rgb(0, 0, 255);
                         //canvas.drawColor(backgroundColor);
                         Paint pp = new Paint();
                         pp.setColor(backgroundColor);
@@ -163,12 +179,14 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
                         }
                         lines.add("");
 
+                        // 화면 상단 우측 정보
                         lines.add("Frame: " + previewWidth + "x" + previewHeight);
                         lines.add("Crop: " + copy.getWidth() + "x" + copy.getHeight());
                         lines.add("View: " + canvas.getWidth() + "x" + canvas.getHeight());
                         lines.add("Rotation: " + sensorOrientation);
                         lines.add("Inference time: " + lastProcessingTimeMs + "ms");
                         lines.add("Humans found: " + lastHumansFound);
+                        lines.add("좌표" + Arrays.toString(model_output));
 
                         //borderedText.drawLines(canvas, 10, canvas.getHeight() - 10, lines); // bottom
                         borderedText.drawLinesTop(canvas, copy.getWidth() * scaleFactor + 30, 10, lines); // top-right
@@ -275,9 +293,11 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
 
         //    for human in human_list:
         for (TensorFlowPoseDetector.Human human : human_list) {
-            Point[] centers = new Point[cp];
+            Point[] centers = new Point[cp]; // 포즈 좌표
             //part_idxs = human.keys()
             Set<Integer> part_idxs = human.parts.keySet();
+
+            int[] pose_point = new int[38]; // 포즈 좌표 저장할 배열
 
             LOGGER.i("COORD =====================================");
             //# draw point
@@ -292,6 +312,19 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
                 TensorFlowPoseDetector.Coord part_coord = human.parts.get(i.index);
                 //center = (int(part_coord[0] * image_w + 0.5), int(part_coord[1] * image_h + 0.5))
                 Point center = new Point((int) (part_coord.x * image_w + 0.5f), (int) (part_coord.y * image_h + 0.5f));
+
+
+                // 검출된 값 저장
+                if(part_coord.x == NULL) {
+                    pose_point[i.index*2] = 0;
+                    pose_point[i.index*2 + 1] = 0;
+                }
+                else {
+                    pose_point[i.index + i.index] = round(part_coord.x * image_w + 0.5f);
+                    pose_point[i.index + i.index + 1] = round(part_coord.y * image_h + 0.5f);
+                }
+
+
                 //centers[i] = center
                 centers[i.index] = center;
 
@@ -303,6 +336,10 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
 
                 LOGGER.i("COORD %s, %f, %f", i.toString(), part_coord.x, part_coord.y);
             }
+            System.out.println("maybe "+ Arrays.toString(pose_point)); // 확인용 출력코드
+            // 모델 구동
+            Interpreter tflite = getTfliteInterpreter("simple_1.tflite");
+            tflite.run(pose_point, model_output);
 
             //# draw line
             //for pair_order, pair in enumerate(CocoPairsRender):
@@ -324,6 +361,29 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
         }
         //    return img_copied
     }
+
+    // tflite 때문에 추가한 함수 1
+    private Interpreter getTfliteInterpreter(String modelPath) {
+        try {
+            return new Interpreter(loadModelFile(MocapActivity.this, modelPath));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+    // tflite 때문에 추가한 함수 2
+    private MappedByteBuffer loadModelFile(Activity activity, String modelPath) throws IOException {
+        AssetFileDescriptor fileDescriptor = activity.getAssets().openFd(modelPath);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+    }
+
+
 
     @Override
     protected int getLayoutId() {

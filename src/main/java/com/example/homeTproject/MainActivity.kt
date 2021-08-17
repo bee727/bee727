@@ -50,6 +50,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    public fun onFragmentChange(index : Int) {
+        // HomeFragment에서 시작버튼 클릭시 횟수 정하는 SelectCountFragment로
+        // 이동하게 하는 함수 (작성중)
+        if(index == 0){
+//            supportFragmentManager.beginTransaction().replace()
+        }
+    }
+
 
 
 }

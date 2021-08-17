@@ -24,6 +24,7 @@ class HomeFragment :Fragment() {
                 val nextIntent = Intent(context, MocapActivity::class.java)
                 startActivity(nextIntent)
             }
+            //SelectCountFragment() // 코드 바꿔서 프래그먼트 이동하도록
         }
         return binding.root
     }

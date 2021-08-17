@@ -30,11 +30,13 @@ import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
+import android.util.Log;
 import android.util.Size;
 import android.view.KeyEvent;
 import android.view.Surface;
@@ -46,8 +48,8 @@ import java.nio.ByteBuffer;
 import com.example.homeTproject.env.Logger;
 import com.example.homeTproject.R;
 import com.example.homeTproject.env.ImageUtils;
+import com.google.android.material.tabs.TabLayout;
 
-// 이게 앱 화면 그리는 클래스 인듯
 public abstract class CameraActivity extends Activity
         implements OnImageAvailableListener, Camera.PreviewCallback {
     private static final Logger LOGGER = new Logger();
@@ -74,9 +76,10 @@ public abstract class CameraActivity extends Activity
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        LOGGER.d("onCreate " + this);
+        // 어플이 처음 실행되고, Activity가 생성될 때 자동으로 호출되는 메서드이다
+        LOGGER.d("onCreate " + this);   // 로그에 메시지 찍기
         super.onCreate(null);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // 유저의 입력이 없어도 화면 켜진 상태 유지
 
         setContentView(R.layout.activity_camera);
 
@@ -316,17 +319,21 @@ public abstract class CameraActivity extends Activity
     }
 
     private String chooseCamera() {
-        final CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        final CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE); // 카메라 매니저 불러오기
         try {
+            //manager.getCameraIdList():  스마트폰에 탑재된 카메라의 식별자를 얻을 수 있음(문자열 배열, 카메라가 2개면 배열의 크기 2)
             for (final String cameraId : manager.getCameraIdList()) {
+                // manager.getCameraCharacteristics(cameraId): 각 카메라의 정보를 담고 있는 CameraCharacteristics를 얻을 수 있음
                 final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
 
                 // We don't use a front facing camera in this sample.
+                // CameraCharacteristics.LENS_FACING: 카메라의 렌즈 방향을 얻을 때 사용하는 키, 상숫값의 데이터
+                // LENS_FACING_FRONT: 전면 카메라(value : 0), LENS_FACING_BACK: 후면 카메라(value : 1), LENS_FACING_EXTERNAL: 기타 카메라(value : 2)
                 final Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
                 if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue;
+                    continue; // 전면 카메라면 아래 코드 실행없이 넘어감
                 }
-
+                // StreamConfigurationMap: 카메라의 각종 지원 정보가 포함되어 있음 ex) 카메라에서 지원하는 크기 목록 등
                 final StreamConfigurationMap map =
                         characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
@@ -335,8 +342,10 @@ public abstract class CameraActivity extends Activity
                 }
 
                 // Fallback to camera1 API for internal cameras that don't have full support.
+                // 완전히 지원하지 않는 내부 카메라의 경우 camera1 API로 대체합니다.
                 // This should help with legacy situations where using the camera2 API causes
                 // distorted or otherwise broken previews.
+                // 이렇게 하면 Camera2 API를 사용하면 미리보기가 왜곡되거나 깨지는 레거시 상황에 도움이 됩니다.
                 useCamera2API = (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
                         || isHardwareLevelSupported(characteristics,
                         CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
@@ -346,7 +355,6 @@ public abstract class CameraActivity extends Activity
         } catch (CameraAccessException e) {
             LOGGER.e(e, "Not allowed to access camera");
         }
-
         return null;
     }
 
@@ -377,7 +385,7 @@ public abstract class CameraActivity extends Activity
 
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.container, fragment)
+                .replace(R.id.container, fragment) //activity_camera.xml의  Fragmlayout
                 .commit();
     }
 
