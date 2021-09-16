@@ -21,6 +21,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.widget.Toast;
 
 import com.example.homeTproject.env.BorderedText;
 import com.example.homeTproject.env.ImageUtils;
@@ -52,9 +53,12 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
 
     int[] model_output = new int[38];
     float[][] outt = new float[1][5];
-    String Pose_result,temp="";
-    String Intent_Pose;
-    int cnt=0;
+    String Pose_result = "";
+    String Intent_Pose = "";
+    float Posedetect_max = 0;
+    int cnt1 = 0;
+    boolean ready_pose = false;
+    long start_time = 0;
 
     private static final int MP_INPUT_SIZE = 368;
     private static final String MP_INPUT_NAME = "image";
@@ -194,16 +198,50 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
                         lines.add("Rotation: " + sensorOrientation);
                         lines.add("Inference time: " + lastProcessingTimeMs + "ms");
                         lines.add("Humans found: " + lastHumansFound);
-                        lines.add("포즈: " + Pose_result);
-                        lines.add("넘겨받은 포즈: " + Intent_Pose);
-//                        if(temp != Pose_result){
-//                            cnt=0;
-//                            temp=Pose_result;
-//                        }
-//                        else{
-//                            cnt++;
-//                        }
-//                        lines.add("count:" + cnt);
+                        lines.add("포즈: " + Pose_result);  // 현재 측정된 포즈
+                        lines.add("포즈 정확도: " + Posedetect_max); // 포즈의 정확도
+                        lines.add("측정할 포즈: " + Intent_Pose); // 화면 이동 시 넘겨받은 포즈
+                        lines.add("ready_pose: " + ready_pose);
+
+                        // 스쿼트 운동 시
+                        if (Intent_Pose.equals("Squat")){
+                            // Stand 자세일 때 ready_pose를 true로 변경
+                            if(Pose_result.equals("Stand")){ ready_pose = true;}
+                            // read_pose가 true고 현재 동작이 스쿼트일 시 cnt1 증가하고 ready_pose 다시 false
+                            if(ready_pose == true && Pose_result.equals("Squat")){
+                                cnt1++;
+                                ready_pose = false;
+                            }
+                        }
+
+                        // 플랭크 동작 시작 시: 플랭크 동작 제대로 안잡혀서 잘 돌아가는지 확인은 못 해봄
+                        if (Intent_Pose == "Plank" && Pose_result == "Plank") {
+                            if(start_time == 0){ start_time = System.currentTimeMillis(); }
+                            long end_time = System.currentTimeMillis();
+                            // 운동종료시간-운동시작시간 이 10초가 넘으면 cnt1 증가
+                            if ((end_time - start_time) > 10000) {
+                                cnt1 ++;
+                            }
+                        }
+
+                        // 레그레이즈 동작 시: 레그레이즈 사진 포즈 검출 불가로 동작 확인 못 해봄
+                        // 동작원리는 스쿼트와 동일
+                        if(Intent_Pose.equals("LegRaise")){
+                            if(Pose_result == "Lying"){ ready_pose = true; }
+                            if (ready_pose == true && Pose_result.equals("LegUp")) {
+                                cnt1++;
+                                ready_pose = false;
+                            }
+                        }
+                        lines.add("횟수: " + cnt1);
+                        if(cnt1 == 10 || (Intent_Pose.equals("Plank") && cnt1 == 2)){
+                            // 스쿼트or레그레이즈의 횟수가 10회 이상 시 운동 종료 후
+                            // 홈 화면으로 이동
+                            Intent to_mainPage = new Intent(MocapActivity.this, MainActivity.class);
+                            Toast.makeText(getApplicationContext(), "수고하셨습니다! "+Intent_Pose+" 10회 완료", Toast.LENGTH_SHORT).show();
+                            startActivity(to_mainPage);
+                        }
+
 
                         //borderedText.drawLines(canvas, 10, canvas.getHeight() - 10, lines); // bottom
                         borderedText.drawLinesTop(canvas, copy.getWidth() * scaleFactor + 30, 10, lines); // top-right
@@ -373,6 +411,7 @@ public class MocapActivity extends CameraActivity implements OnImageAvailableLis
                     maxIndex = i;
                 }
             }
+            Posedetect_max = max;
             // 최댓값 인덱스에 해당하는 포즈를 Pose_result에 저장
             String[] classes = {"Stand","Squat","Lying","LegUp","Plank"};
             Pose_result = classes[maxIndex];
